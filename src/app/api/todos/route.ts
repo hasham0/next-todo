@@ -5,9 +5,11 @@ import { sql } from "@vercel/postgres";
 export async function GET(request: NextRequest) {
   try {
     await sql`CREATE TABLE IF NOT EXISTS TodoData(id serial, Task varchar(255), Status boolean)`;
-    const data: Todo[] = await db.select().from(todoTable).execute();
+
+    const allTodos: Todo[] = await db.select().from(todoTable).execute();
+
     return NextResponse.json({
-      data,
+      data: allTodos,
     });
   } catch (error) {
     const err = (error as { message: string }).message;

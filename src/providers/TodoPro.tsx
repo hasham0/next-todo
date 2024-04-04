@@ -98,6 +98,7 @@ export default function TodoPro({ children }: Props) {
         mode: "same-origin",
       });
       const result: { data: Todo[] } = await responce.json();
+      console.log(result.data);
       setList(result.data);
     } catch (error) {
       console.log("🚀  getAllTodos  error:", error);

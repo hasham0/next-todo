@@ -108,15 +108,14 @@ export default function TodoField({}: Props) {
               </tr>
             </thead>
             <tbody className="w-full">
-              {list.map((item: Todo, index: number) => {
-                return (
+              {list &&
+                list.map((item: Todo, index: number) => (
                   <List
                     key={index}
                     values={item}
                     myKey={item.id}
                   />
-                );
-              })}
+                ))}
             </tbody>
           </table>
         </section>
