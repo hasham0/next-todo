@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import TodoPro from "@/providers/TodoPro";
+import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +18,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <TodoPro>
+          <Toaster
+            position="top-right"
+            reverseOrder={false}
+          />
+          {children}
+        </TodoPro>
+      </body>
     </html>
   );
 }
