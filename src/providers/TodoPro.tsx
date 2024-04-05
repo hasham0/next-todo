@@ -55,7 +55,7 @@ export default function TodoPro({ children }: Props) {
       const result: responceTS = await responce.json();
       toast.success(result.message);
       const todos = JSON.parse(localStorage.getItem("TodoValues")!);
-      if (todos.length < 1) {
+      if (todos.length <= 0) {
         localStorage.setItem("TodoValues", JSON.stringify(result.data));
         setList(result.data);
       } else {
