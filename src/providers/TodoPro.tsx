@@ -55,7 +55,7 @@ export default function TodoPro({ children }: Props) {
       const result: responceTS = await responce.json();
       toast.success(result.message);
       const todos = JSON.parse(localStorage.getItem("TodoValues")!);
-      if (todos === null) {
+      if (todos.length < 1) {
         localStorage.setItem("TodoValues", JSON.stringify(result.data));
         setList(result.data);
       } else {
@@ -98,7 +98,7 @@ export default function TodoPro({ children }: Props) {
   const getAllTodos = async () => {
     try {
       const todos = JSON.parse(localStorage.getItem("TodoValues")!);
-      if (todos !== null) {
+      if (todos.length >= 1) {
         setList(todos);
       } else {
         const responce = await fetch("/api/todos", {
@@ -117,6 +117,9 @@ export default function TodoPro({ children }: Props) {
   // handle update
   const handleUpdate = async (id: number) => {
     try {
+      if (!userInputs) {
+        toast.error("fill all fields");
+      }
       const responce = await fetch(`/api/todos/${id}`, {
         method: "PUT",
         headers: {
@@ -125,20 +128,20 @@ export default function TodoPro({ children }: Props) {
         body: JSON.stringify(userInputs),
         mode: "same-origin",
       });
-
-      const result: responceTS = await responce.json();
+      const result: { message: string; data: Todo } = await responce.json();
+      console.log("🚀  handleUpdate  result:", result);
       toast.success(result.message);
-      setUpdateBtn(false);
-      const todos = JSON.parse(localStorage.getItem("TodoValues")!);
+      const todos: Todo[] = JSON.parse(localStorage.getItem("TodoValues")!);
       if (todos) {
         const removeTodo = todos.findIndex((item: Todo) => item.id === id);
-        todos.splice(removeTodo, 1, result.data[0]);
+        todos.splice(Number(removeTodo), 1, result.data);
         setList(todos);
         localStorage.setItem("TodoValues", JSON.stringify(todos));
       }
     } catch (error) {
       console.log("🚀  handleDelete  error:", error);
     } finally {
+      setUpdateBtn(false);
       initialState();
     }
   };
@@ -174,7 +177,7 @@ export default function TodoPro({ children }: Props) {
       });
       const result: responceTS = await responce.json();
       toast.success(result.message);
-      localStorage.setItem("TodoValues", JSON.stringify(null));
+      localStorage.setItem("TodoValues", JSON.stringify([]));
       setList([]);
     } catch (error) {
       console.log("🚀  handleDelete  error:", error);

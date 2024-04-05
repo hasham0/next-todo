@@ -14,12 +14,11 @@ export async function PUT(request: NextRequest, userID: UserIdTS) {
       .update(todoTable)
       .set({ task: updateData.task, status: updateData.status })
       .where(eq(todoTable.id, Number(id)))
-      .returning({
-        updatedId: todoTable.id,
-      });
+      .returning({ updatedId: todoTable.id });
+
     return NextResponse.json({
       message: "todo updated successfully",
-      data: updatedUserId,
+      data: { id: updatedUserId[0].updatedId, ...updateData },
     });
   } catch (error) {
     const err = (error as { message: string }).message;

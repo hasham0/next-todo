@@ -58,7 +58,6 @@ export default function TodoField({}: Props) {
               className="rounded-lg bg-black p-2 capitalize text-white duration-200 ease-in-out hover:bg-gray-300 hover:text-black"
               type="button"
               onClick={() => {
-                console.log(editID);
                 if (editID) handleUpdate(editID);
               }}
             >
@@ -108,7 +107,7 @@ export default function TodoField({}: Props) {
             </thead>
             <tbody className="w-full">
               {list &&
-                list.length > 1 &&
+                list.length >= 1 &&
                 list.map((item: Todo, index: number) => {
                   return (
                     <List
