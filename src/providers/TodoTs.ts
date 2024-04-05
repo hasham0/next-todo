@@ -3,7 +3,7 @@ import { ChangeEvent, FormEvent } from "react";
 
 type TodoContext = {
   userInputs: newTodo;
-  list: Todo[] | undefined | null;
+  list: Todo[];
   editID: number | undefined;
   updateBtn: boolean;
   handleUpdate: (id: number) => void;

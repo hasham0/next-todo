@@ -44,7 +44,6 @@ export async function DELETE(request: NextRequest) {
     const deleteAllData = await db.delete(todoTable).returning();
     return NextResponse.json({
       message: "all todo deleted",
-      data: deleteAllData,
     });
   } catch (error) {
     const err = (error as { message: string }).message;

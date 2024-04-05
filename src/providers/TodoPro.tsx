@@ -17,19 +17,23 @@ type Props = { children: ReactNode };
 const Todos = createContext<TodoContext>({} as TodoContext);
 
 export default function TodoPro({ children }: Props) {
+  /* <!-- user todo inputs --> */
   const [userInputs, setUserInputs] = useState<newTodo>({
     task: "",
     status: false,
   });
-  const [list, setList] = useState<Todo[] | null | undefined>([]);
 
-  // initial input states
+  /* <!-- list array --> */
+  const [list, setList] = useState<Todo[]>([]);
+
+  /* <!--  initial input states  --> */
   const initialState = () =>
     setUserInputs({
       task: "",
       status: false,
     });
 
+  /* <!-- change handler --> */
   const handleChangeInputs = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -41,6 +45,7 @@ export default function TodoPro({ children }: Props) {
     });
   };
 
+  /* <!-- form submit handler --> */
   const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     try {
       event.preventDefault();
@@ -71,16 +76,16 @@ export default function TodoPro({ children }: Props) {
     }
   };
 
-  // edit id
+  /* <!-- todo edit index --> */
   const [editID, setEditID] = useState<number>();
 
-  // update
+  /* <!-- update button --> */
   const [updateBtn, setUpdateBtn] = useState<boolean>(false);
 
-  // handle Reset
+  /* <!-- reset handler  --> */
   const handleReset = () => initialState();
 
-  //   handle edit
+  /* <!-- edit handler --> */
   const handleEdit = (id: number) => {
     if (list) {
       let listClone = list.slice();
@@ -94,7 +99,7 @@ export default function TodoPro({ children }: Props) {
     }
   };
 
-  // get all todos
+  /* <!-- get all todos handler --> */
   const getAllTodos = async () => {
     try {
       const todos = JSON.parse(localStorage.getItem("TodoValues")!);
@@ -114,7 +119,7 @@ export default function TodoPro({ children }: Props) {
     }
   };
 
-  // handle update
+  /* <!-- update todo handler  --> */
   const handleUpdate = async (id: number) => {
     try {
       if (!userInputs) {
@@ -129,7 +134,6 @@ export default function TodoPro({ children }: Props) {
         mode: "same-origin",
       });
       const result: { message: string; data: Todo } = await responce.json();
-      console.log("🚀  handleUpdate  result:", result);
       toast.success(result.message);
       const todos: Todo[] = JSON.parse(localStorage.getItem("TodoValues")!);
       if (todos) {
@@ -146,7 +150,7 @@ export default function TodoPro({ children }: Props) {
     }
   };
 
-  // handle delete
+  /* <!-- delete todo handler --> */
   const handleDelete = async (id: number) => {
     try {
       const responce = await fetch(`/api/todos/${id}`, {
@@ -155,7 +159,6 @@ export default function TodoPro({ children }: Props) {
       });
       const result: responceTS = await responce.json();
       toast.success(result.message);
-
       const todos = JSON.parse(localStorage.getItem("TodoValues")!);
       if (todos) {
         const updatedTodos = todos.filter((todo: Todo) => todo.id !== id);
@@ -167,6 +170,7 @@ export default function TodoPro({ children }: Props) {
     }
   };
 
+  /* <!-- delete all todo handler  --> */
   const handleClearAll = async () => {
     try {
       const responce = await fetch("/api/todos", {
@@ -184,9 +188,10 @@ export default function TodoPro({ children }: Props) {
     }
   };
 
+  //note: call all todos when dom is mount
   useEffect(() => {
     getAllTodos();
-  }, [setList]);
+  }, []);
 
   return (
     <Todos.Provider
