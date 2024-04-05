@@ -5,13 +5,12 @@ import {
   FormEvent,
   ReactNode,
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useState,
 } from "react";
 import toast from "react-hot-toast";
-import { TodoContext } from "./TodoTs";
+import { TodoContext, responceTS } from "./TodoTs";
 
 type Props = { children: ReactNode };
 
@@ -22,52 +21,55 @@ export default function TodoPro({ children }: Props) {
     task: "",
     status: false,
   });
-  const [list, setList] = useState<Todo[]>([]);
+  const [list, setList] = useState<Todo[] | null | undefined>([]);
 
   // initial input states
-  const initialState = useCallback(
-    () =>
-      setUserInputs({
-        task: "",
-        status: false,
-      }),
-    []
-  );
+  const initialState = () =>
+    setUserInputs({
+      task: "",
+      status: false,
+    });
 
-  const handleChangeInputs = useCallback(
-    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const name = event.target.name;
-      const value = event.target.value;
-      setUserInputs({
-        ...userInputs,
-        [name]: name === "status" ? value === "done" : value,
+  const handleChangeInputs = (
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const name = event.target.name;
+    const value = event.target.value;
+    setUserInputs({
+      ...userInputs,
+      [name]: name === "status" ? value === "done" : value,
+    });
+  };
+
+  const handleFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    try {
+      event.preventDefault();
+      const responce = await fetch("/api/todos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userInputs),
+        mode: "same-origin",
       });
-    },
-    []
-  );
-
-  const handleFormSubmit = useCallback(
-    async (event: FormEvent<HTMLFormElement>) => {
-      try {
-        event.preventDefault();
-        const responce = await fetch("/api/todos", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(userInputs),
-          mode: "same-origin",
-        });
-
-        const result = await responce.json();
-        toast.success(result.message);
-        initialState();
-      } catch (error) {
-        console.log(error);
+      const result: responceTS = await responce.json();
+      toast.success(result.message);
+      const todos = JSON.parse(localStorage.getItem("TodoValues")!);
+      if (todos === null) {
+        localStorage.setItem("TodoValues", JSON.stringify(result.data));
+        setList(result.data);
+      } else {
+        const newData = todos.slice();
+        newData.push(result.data[0]);
+        localStorage.setItem("TodoValues", JSON.stringify(newData));
+        setList(newData);
       }
-    },
-    []
-  );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      initialState();
+    }
+  };
 
   // edit id
   const [editID, setEditID] = useState<number>();
@@ -76,37 +78,44 @@ export default function TodoPro({ children }: Props) {
   const [updateBtn, setUpdateBtn] = useState<boolean>(false);
 
   // handle Reset
-  const handleReset = useCallback(() => initialState(), []);
+  const handleReset = () => initialState();
 
   //   handle edit
-  const handleEdit = useCallback((id: number) => {
-    let listClone = list.slice();
-    const match = listClone.findIndex((item) => item.id === id);
-    setUpdateBtn(true);
-    setEditID(id);
-    setUserInputs({
-      task: listClone[match].task,
-      status: listClone[match].status,
-    });
-  }, []);
+  const handleEdit = (id: number) => {
+    if (list) {
+      let listClone = list.slice();
+      const match = listClone.findIndex((item) => item.id === id);
+      setUpdateBtn(true);
+      setEditID(id);
+      setUserInputs({
+        task: listClone[match].task,
+        status: listClone[match].status,
+      });
+    }
+  };
 
   // get all todos
-  const getAllTodos = useCallback(async () => {
+  const getAllTodos = async () => {
     try {
-      const responce = await fetch("/api/todos", {
-        method: "GET",
-        mode: "same-origin",
-      });
-      const result: { data: Todo[] } = await responce.json();
-      console.log(result.data);
-      setList(result.data);
+      const todos = JSON.parse(localStorage.getItem("TodoValues")!);
+      if (todos !== null) {
+        setList(todos);
+      } else {
+        const responce = await fetch("/api/todos", {
+          method: "GET",
+          mode: "same-origin",
+        });
+        const result: responceTS = await responce.json();
+        setList(result.data);
+        return localStorage.setItem("TodoValues", JSON.stringify(result.data));
+      }
     } catch (error) {
       console.log("🚀  getAllTodos  error:", error);
     }
-  }, []);
+  };
 
   // handle update
-  const handleUpdate = useCallback(async (id: number) => {
+  const handleUpdate = async (id: number) => {
     try {
       const responce = await fetch(`/api/todos/${id}`, {
         method: "PUT",
@@ -116,30 +125,45 @@ export default function TodoPro({ children }: Props) {
         body: JSON.stringify(userInputs),
         mode: "same-origin",
       });
-      const result = await responce.json();
+
+      const result: responceTS = await responce.json();
       toast.success(result.message);
       setUpdateBtn(false);
-      initialState();
+      const todos = JSON.parse(localStorage.getItem("TodoValues")!);
+      if (todos) {
+        const removeTodo = todos.findIndex((item: Todo) => item.id === id);
+        todos.splice(removeTodo, 1, result.data[0]);
+        setList(todos);
+        localStorage.setItem("TodoValues", JSON.stringify(todos));
+      }
     } catch (error) {
       console.log("🚀  handleDelete  error:", error);
+    } finally {
+      initialState();
     }
-  }, []);
+  };
 
   // handle delete
-  const handleDelete = useCallback(async (id: number) => {
+  const handleDelete = async (id: number) => {
     try {
       const responce = await fetch(`/api/todos/${id}`, {
         method: "DELETE",
         mode: "same-origin",
       });
-      const result = await responce.json();
+      const result: responceTS = await responce.json();
       toast.success(result.message);
+
+      const todos = JSON.parse(localStorage.getItem("TodoValues")!);
+      if (todos) {
+        const updatedTodos = todos.filter((todo: Todo) => todo.id !== id);
+        setList(updatedTodos);
+        localStorage.setItem("TodoValues", JSON.stringify(updatedTodos));
+      }
     } catch (error) {
       console.log("🚀  handleDelete  error:", error);
     }
-  }, []);
+  };
 
-  //   clear all data
   const handleClearAll = async () => {
     try {
       const responce = await fetch("/api/todos", {
@@ -148,8 +172,10 @@ export default function TodoPro({ children }: Props) {
           "Content-Type": "application/json",
         },
       });
-      const result = await responce.json();
+      const result: responceTS = await responce.json();
       toast.success(result.message);
+      localStorage.setItem("TodoValues", JSON.stringify(null));
+      setList([]);
     } catch (error) {
       console.log("🚀  handleDelete  error:", error);
     }
@@ -157,8 +183,7 @@ export default function TodoPro({ children }: Props) {
 
   useEffect(() => {
     getAllTodos();
-    return () => {};
-  }, [handleFormSubmit, handleUpdate, handleDelete]);
+  }, [setList]);
 
   return (
     <Todos.Provider

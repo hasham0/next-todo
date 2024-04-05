@@ -17,7 +17,6 @@ export default function TodoField({}: Props) {
     editID,
     handleUpdate,
   } = useTodo();
-
   return (
     <section>
       {/* todo form */}
@@ -109,13 +108,16 @@ export default function TodoField({}: Props) {
             </thead>
             <tbody className="w-full">
               {list &&
-                list.map((item: Todo, index: number) => (
-                  <List
-                    key={index}
-                    values={item}
-                    myKey={item.id}
-                  />
-                ))}
+                list.length > 1 &&
+                list.map((item: Todo, index: number) => {
+                  return (
+                    <List
+                      key={index}
+                      values={item}
+                      myKey={item.id}
+                    />
+                  );
+                })}
             </tbody>
           </table>
         </section>

@@ -3,7 +3,7 @@ import { ChangeEvent, FormEvent } from "react";
 
 type TodoContext = {
   userInputs: newTodo;
-  list: Todo[];
+  list: Todo[] | undefined | null;
   editID: number | undefined;
   updateBtn: boolean;
   handleUpdate: (id: number) => void;
@@ -17,4 +17,5 @@ type TodoContext = {
   handleFormSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
 
-export type { TodoContext };
+type responceTS = { message: string; data: Todo[] };
+export type { TodoContext, responceTS };
